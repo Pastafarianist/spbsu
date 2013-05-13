@@ -141,8 +141,6 @@ def print_gray_code_iterative(n):
 			break
 		s[flip_at] = 1 - s[flip_at]
 
-
-
 def print_gray_code_iterative_bitmagic(n):
 	""" The basic idea is the same, however, there is considerably
 	more magic going on. """
@@ -156,6 +154,11 @@ def print_gray_code_iterative_bitmagic(n):
 		if flip_at & (1 << n):
 			break
 		s ^= flip_at
+
+def print_gray_code_iterative_voodoo(n):
+	""" Don't try this at home. """
+	for i in xrange(1 << n):
+		print bin(i ^ (i << 1))[2:-1].zfill(n)
 
 
 def test():
@@ -171,6 +174,8 @@ def test():
 	print_gray_code_iterative(n)
 	print '-' * 16
 	print_gray_code_iterative_bitmagic(n)
+	print '-' * 16
+	print_gray_code_iterative_voodoo(n)
 
 if __name__ == '__main__':
 	test()
