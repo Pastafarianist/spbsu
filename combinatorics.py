@@ -142,6 +142,22 @@ def print_gray_code_iterative(n):
 		s[flip_at] = 1 - s[flip_at]
 
 
+
+def print_gray_code_iterative_bitmagic(n):
+	""" The basic idea is the same, however, there is considerably
+	more magic going on. """
+	s = 0
+	index = 0
+	flip_at = -1
+	while True:
+		print bin(s)[2:].zfill(n)
+		index += 1
+		flip_at = (index ^ (index - 1)) & index
+		if flip_at & (1 << n):
+			break
+		s ^= flip_at
+
+
 def test():
 	n = 3
 	print_permutations_nonrecursive(n)
@@ -153,6 +169,8 @@ def test():
 	print_gray_code_recursive(n)
 	print '-' * 16
 	print_gray_code_iterative(n)
+	print '-' * 16
+	print_gray_code_iterative_bitmagic(n)
 
 if __name__ == '__main__':
 	test()
