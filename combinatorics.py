@@ -160,6 +160,24 @@ def print_gray_code_iterative_voodoo(n):
 	for i in xrange(1 << n):
 		print bin(i ^ (i << 1))[2:-1].zfill(n)
 
+def print_digit_change_sequence(n):
+	""" We're using an unusual representation for the stack here. This stack
+	may contain only values from the range (1..n) but it supports adding many
+	elements at once in constant time. It is implemented as a linked list on
+	an array. If we denote the array as (next), then the head of the list is
+	the value at (next[0]). The element after (i) is stored at (next[i]).
+	(next[n] == n + 1) for consistency. """
+	next = [v + 1 for v in xrange(n + 1)] # full stack
+	p = 0
+	while True:
+		p = next[0] # grab top element
+		if p == n + 1: # bottom of the stack is reached
+			break
+		print p,
+		if p != 1: # if 1 and a huge tail behind it are not in the stack
+			next[0] = 1 # add them
+		next[p - 1], next[p] = next[p], p + 1 # remove (p) from the stack
+
 
 def test():
 	n = 3
@@ -176,6 +194,8 @@ def test():
 	print_gray_code_iterative_bitmagic(n)
 	print '-' * 16
 	print_gray_code_iterative_voodoo(n)
+	print '-' * 16
+	print_digit_change_sequence(n)
 
 if __name__ == '__main__':
 	test()
