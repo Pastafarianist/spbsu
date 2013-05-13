@@ -88,6 +88,33 @@ def print_subsets_lexicographically(n):
 			pos += 1
 		s[pos] = 1
 
+def print_gray_code_recursive(n):
+	""" Gray code is a sequence of binary numbers of fixed length
+	where every next number differs from the previous one in just
+	one digit. Obviously, the two possible Gray codes of length 1
+	are (0, 1) and (1, 0). Now, if we know how to make Gray codes
+	of length (n), it's easy to make them one digit longer. We could
+	take two copies of a sequence of codes of length (n), reverse one
+	of them and concatenate. The resulting sequence will still be a
+	Gray code with one exception at the boundary between sequences.
+	Now, we can append a zero to the first part and a one to the
+	second. At any position, say, at the end. Now the sequence contains
+	numbers of length (n+1) and it still remains a Gray code.
+	The implementation here relies on this:
+	- step(pos) prints all Gray codes of length (n-pos) with a fixed prefix,
+	  namely everything before (pos)
+	- when called twice with on the same suffix, it prints the code
+	  first in direct order, then in reverse order """
+	def step(pos):
+		if pos == n: # recursion end reached
+			print ''.join(str(v) for v in s)
+			return
+		step(pos + 1)
+		s[pos] = 1 - s[pos] # makes the second property work
+		step(pos + 1)
+	s = [0] * n
+	step(0)
+
 
 def test():
 	n = 3
