@@ -115,6 +115,32 @@ def print_gray_code_recursive(n):
 	s = [0] * n
 	step(0)
 
+def print_gray_code_iterative(n):
+	""" The idea here is to observe that the position of the changing
+	digit in Gray codes is the same as the position of the leftmost changing
+	digit in natural binary numbers. """
+	s = [0] * n
+	index = 0 # of the currently printed code
+	flip_at = 0
+	temp = 0 # we're doing Pascal here
+	# probably one of the few chances for Pascal to have an advantage
+	# is the absence of (repeat...until) in Python
+	while True:
+		print ''.join(str(v) for v in s)
+		# now we want to calculate (flip_at) for the next iteration
+		# it equals the number of 1's at the end of (index), plus 1
+		# which, in turn, equals the number of 0's at the end of (index+1)
+		index += 1 # updating now, so there's no need to calculate it twice
+		flip_at = 0
+		temp = index
+		while temp % 2 == 0: # while the last digit is zero
+			temp //= 2 # shift one digit to the right
+			flip_at += 1 # and update the counter
+		# here we go, a replacement
+		if flip_at >= n: # we've gone too far
+			break
+		s[flip_at] = 1 - s[flip_at]
+
 
 def test():
 	n = 3
@@ -125,6 +151,8 @@ def test():
 	print_subsets_lexicographically(n)
 	print '-' * 16
 	print_gray_code_recursive(n)
+	print '-' * 16
+	print_gray_code_iterative(n)
 
 if __name__ == '__main__':
 	test()
