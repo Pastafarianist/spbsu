@@ -123,6 +123,8 @@ def test():
 	print_permutations_recursive(n)
 	print '-' * 16
 	print_subsets_lexicographically(n)
+	print '-' * 16
+	print_gray_code_recursive(n)
 
 if __name__ == '__main__':
 	test()
