@@ -1,3 +1,19 @@
+def binary_search(array, value):
+	""" This is my own implementation of binary search algorithm. It is
+	slightly different from the one we're expected to show. It uses a
+	half-opened interval as the working range, that is, [left, right). """
+	left, right = 0, len(array)
+	while left + 1 < right: # while the interval contains at least 2 elements
+		middle = (left + right) // 2 # split it in half
+		if array[middle] <= value:
+			left = middle # go right
+		else:
+			right = middle # go left
+	if array[left] == value:
+		return left
+	else:
+		return None
+
 def make_next_permutation(p):
 	""" The algorithm works as follows: first, we find the longest
 	decreasing suffix of the permutation. If the entire permutation
@@ -213,6 +229,18 @@ def print_subsets_fixed_length(sub_len, n):
 
 
 def test():
+	# testing binary search
+	import random
+	max_size = 10
+	max_array = xrange(max_size)
+	for _ in xrange(1000):
+		array = sorted(random.sample(max_array, random.randint(1, max_size)))
+		value = random.choice(max_array)
+		result = binary_search(array, value)
+		if result is None and value in array or \
+			result is not None and array[result] != value:
+			print 'binary_search(%s, %d) -> %s' % (
+				array, value, result)
 	n = 3
 	print_permutations_iterative(n)
 	print '-' * 16
