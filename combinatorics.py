@@ -1,7 +1,8 @@
 def binary_search(array, value):
 	""" This is my own implementation of binary search algorithm. It is
 	slightly different from the one we're expected to show. It uses a
-	half-opened interval as the working range, that is, [left, right). """
+	half-opened interval as the working range, that is, [left, right).
+	Also, see http://hg.python.org/cpython/file/2.7/Lib/bisect.py """
 	left, right = 0, len(array)
 	while left + 1 < right: # while the interval contains at least 2 elements
 		middle = (left + right) // 2 # split it in half
