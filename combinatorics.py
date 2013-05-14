@@ -22,7 +22,7 @@ def make_next_permutation(p):
 				raise RuntimeError("This should never happen")
 	return False
 
-def print_permutations_nonrecursive(n):
+def print_permutations_iterative(n):
 	p = range(1, n + 1)
 	print p
 	while make_next_permutation(p):
@@ -74,7 +74,7 @@ def print_subsets_lexicographically(n):
 	the reverse order. It's more convenient to do calculations that way. """
 	s = [0] * (n + 1) # start off with zero
 	while s[n] == 0: # check if 2^(n+1) is reached
-		print ''.join(str(v) for v in s[:n])
+		print ''.join(str(v) for v in reversed(s[:n]))
 		# The only tricky part: to add 1 to a binary number we may look at the
 		# pencil-and-paper algorithm and see what's going on.
 		# What is essentially happening is the following:
@@ -121,8 +121,7 @@ def print_gray_code_iterative(n):
 	digit in natural binary numbers. """
 	s = [0] * n
 	index = 0 # of the currently printed code
-	flip_at = 0
-	temp = 0 # we're doing Pascal here
+	flip_at = -1
 	# probably one of the few chances for Pascal to have an advantage
 	# is the absence of (repeat...until) in Python
 	while True:
@@ -177,11 +176,12 @@ def print_digit_change_sequence(n):
 		if p != 1: # if 1 and a huge tail behind it are not in the stack
 			next[0] = 1 # add them
 		next[p - 1], next[p] = next[p], p + 1 # remove (p) from the stack
+	print
 
 
 def test():
 	n = 3
-	print_permutations_nonrecursive(n)
+	print_permutations_iterative(n)
 	print '-' * 16
 	print_permutations_recursive(n)
 	print '-' * 16
