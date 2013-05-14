@@ -178,6 +178,39 @@ def print_digit_change_sequence(n):
 		next[p - 1], next[p] = next[p], p + 1 # remove (p) from the stack
 	print
 
+def print_subsets_fixed_length(sub_len, n):
+	""" To see how this algorithm works, first notice how to make the next
+	subset from the current one. If the current subset ends in a number other
+	than (n), you just increase that number. Otherwise, you find the longest
+	suffix that looks like ((n-t)...(n-1)n). If it has length (k), then there
+	are no more subsets. If no, there's a number before it, say A. The next
+	subset then is ((everything before A unchanged) (A+1)...(A+smth)) where
+	(smth) is large enough to make the subset have length (k). Notice that
+	there's no need to separate the two cases where there is and there is no
+	tail if we allow 0-length tails. So, at each step we find the longest
+	tail and extend it. There may be two outcomes from that extension. The
+	last element may or may not become (n). If it doesn't, then the new tail
+	has length zero. If it does, the new tail is exactly one element longer
+	than the previous one (if the array looked like (xxx...xxBAt...n) where
+	the tail is (t...n), the new array will look like (xxx...xxB(A+1)...n);
+	(B) was smaller than (A) and will definitely be smaller than (A+1)). """
+	subset = range(sub_len)
+	before_tail = sub_len - 1 # initially, the tail is empty
+	while before_tail >= 0:
+		print subset
+		# on the previous iteration we did that tail extension
+		# now we recalculate the length of the current tail
+		if subset[sub_len - 1] == n - 1:
+			before_tail -= 1
+		else:
+			before_tail = sub_len - 1
+		if before_tail >= 0: # we could walk out of the array's boundaries
+			# tail extension
+			subset[before_tail] += 1
+			# if the tail is empty, this loop will not be executed
+			for i in xrange(before_tail + 1, sub_len):
+				subset[i] = subset[i - 1] + 1
+
 
 def test():
 	n = 3
@@ -196,6 +229,8 @@ def test():
 	print_gray_code_iterative_voodoo(n)
 	print '-' * 16
 	print_digit_change_sequence(n)
+	print '-' * 16
+	print_subsets_fixed_length(3, 5)
 
 if __name__ == '__main__':
 	test()
