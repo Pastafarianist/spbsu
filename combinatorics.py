@@ -253,6 +253,36 @@ def tree_to_prufer(tree):
 		del tree[leaf_index][0] # removing connection to the parent
 	return result
 
+def prufer_to_tree(prufer):
+	# I REALLY don't like the style of this code, but this is
+	# written in a hurry and there's not much time for making it better
+	def make_edge(node1, node2):
+		tree[node1].append(node2)
+		tree[node2].append(node1)
+	
+	n = len(prufer) + 2
+	tree = [[] for _ in xrange(n)]
+
+	# restoring last edge
+	if prufer[-1] == n - 1:
+		make_edge(n - 1, n - 2)
+	else:
+		make_edge(n - 1, prufer[-1])
+
+	largest_absent = n - 2 # may be not true at the moment, but we don't care
+	for i in reversed(xrange(1, n - 2)):
+		if tree[prufer[i - 1]]: # if (i-1)th element is already there
+			while tree[largest_absent]: # update largest_absent
+				largest_absent -= 1
+			make_edge(largest_absent, prufer[i])
+		else:
+			make_edge(prufer[i - 1], prufer[i])
+	while tree[largest_absent]:
+			largest_absent -= 1
+	make_edge(largest_absent, prufer[0])
+
+	return tree
+
 
 def test():
 	# testing binary search
@@ -286,7 +316,10 @@ def test():
 	print '-' * 16
 	print_subsets_fixed_length(3, 5)
 	tree = [[7], [3,6,7], [3], [1,2,4,5], [3], [3], [1], [0,1]]
-	print [v + 1 for v in tree_to_prufer(tree)]
+	print tree
+	prufer = tree_to_prufer(tree)
+	print prufer
+	print prufer_to_tree(prufer)
 
 if __name__ == '__main__':
 	test()
