@@ -228,6 +228,31 @@ def print_subsets_fixed_length(sub_len, n):
 			for i in xrange(before_tail + 1, sub_len):
 				subset[i] = subset[i - 1] + 1
 
+def tree_to_prufer(tree):
+	# the tree is represented as an array of lists
+	# (in Python, that's just a list of lists)
+	n = len(tree)
+	result = [] # will be filled on the go
+	for _ in xrange(n - 2):
+		# a leaf is a node which has just one connection
+		# so we walk through all nodes in the graph
+		# from the ones with the smallest index to the ones with the largest
+		for leaf_index, node in enumerate(tree):
+			if len(node) == 1: # if the node is a leaf
+				break # both leaf_index and node will be preserved after this
+		else:
+			raise RuntimeError('The graph is not a tree')
+		parent_index = tree[leaf_index][0]
+		result.append(parent_index)
+		# now we have to destroy the edge
+		# it is stored twice: once in the current node's list
+		# and once in the list of its parent
+		# first, we get rid of the connection from the parent
+		connection_index = tree[parent_index].index(leaf_index)
+		del tree[parent_index][connection_index]
+		del tree[leaf_index][0] # removing connection to the parent
+	return result
+
 
 def test():
 	# testing binary search
@@ -260,6 +285,8 @@ def test():
 	print_digit_change_sequence(n)
 	print '-' * 16
 	print_subsets_fixed_length(3, 5)
+	tree = [[7], [3,6,7], [3], [1,2,4,5], [3], [3], [1], [0,1]]
+	print [v + 1 for v in tree_to_prufer(tree)]
 
 if __name__ == '__main__':
 	test()
