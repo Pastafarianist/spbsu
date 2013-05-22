@@ -300,9 +300,9 @@ def prufer_to_tree(prufer):
 		if i == 0 or tree[prufer[i - 1]]:
 			while tree[largest_absent]: # update largest_absent
 				largest_absent -= 1
-			make_edge(largest_absent, prufer[i])
+			make_edge(prufer[i], largest_absent)
 		else:
-			make_edge(prufer[i - 1], prufer[i])
+			make_edge(prufer[i], prufer[i - 1])
 
 	return tree
 
