@@ -79,19 +79,19 @@ def print_permutations_recursive(n):
 def print_subsets_lexicographically(n):
 	""" A very simple algorithm for generating all subsets of a set
 	with n elements. The representation of a subset is a bitmask of
-	the elements it includes, that is, it contains a 0 at the n-th
+	the elements it includes, that is, it contains a 0 at the i-th
 	position if the element is not in the subset, and a 1 otherwise.
 	We start with the empty subset. Its representation contains n
 	zeros. Now, this sequence of zeros may be interpreted as a binary
 	number. Moreover, every subset has a corresponding binary number
-	in the range between 0 and (2^(n+1) - 1). So to print all possible
+	in the range between 0 and (2^n - 1). So to print all possible
 	subsets, or, which is the same, all numbers in that range, we may
-	just keep adding 1 to the current number until we reach 2^(n+1). The
+	just keep adding 1 to the current number until we reach 2^n. The
 	algorithm below does exactly that. Only it stores the number in
 	the reverse order. It's more convenient to do calculations that way. """
 	s = [0] * (n + 1) # start off with zero
-	while s[n] == 0: # check if 2^(n+1) is reached
-		print ''.join(str(v) for v in reversed(s[:n]))
+	while s[0] == 0: # check if 2^n is reached
+		print ''.join(str(v) for v in s[1:])
 		# The only tricky part: to add 1 to a binary number we may look at the
 		# pencil-and-paper algorithm and see what's going on.
 		# What is essentially happening is the following:
@@ -99,10 +99,10 @@ def print_subsets_lexicographically(n):
 		# - otherwise, the ending of the number looks like 011...11
 		#   in that case, we flip all 1's to 0's
 		#   and that lonely zero changes to one
-		pos = 0
+		pos = n
 		while s[pos] == 1:
 			s[pos] = 0
-			pos += 1
+			pos -= 1
 		s[pos] = 1
 
 def print_gray_code_recursive(n):
