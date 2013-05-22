@@ -174,7 +174,7 @@ def print_gray_code_iterative_bitmagic(n):
 def print_gray_code_iterative_voodoo(n):
 	""" Don't try this at home. """
 	for i in xrange(1 << n):
-		print bin(i ^ (i << 1))[2:-1].zfill(n)
+		print bin(i ^ (i >> 1))[2:].zfill(n)
 
 def print_digit_change_sequence(n):
 	""" We're using an unusual representation for the stack here. This stack
