@@ -254,8 +254,30 @@ def tree_to_prufer(tree):
 	return result
 
 def prufer_to_tree(prufer):
-	# I REALLY don't like the style of this code, but this is
-	# written in a hurry and there's not much time for making it better
+	""" The first non-trivial idea in the algorithm is the restoration of
+	the last edge. To see how that works, we have to note a few things.
+	1. Any tree with more than 1 node always has at least 2 leaves.
+	   Easy to prove by induction.
+	2. During the encoding part we always removed a leaf with the smallest
+	   index. Therefore, the node with the largest index will definitely
+	   survive, since it was always compared to something (we just proved
+	   that). So, one of the nodes has index (n-1). How do we find out the
+	   other node's index?
+	3. The tree at the end must have looked like a-b-c. Three nodes, linked
+	   linearly. Yes, that simple.
+	4. One of these last nodes is (n-1). There are two cases: it's a leaf
+	   or not. They lead to different outcomes.
+	5. If it WAS a leaf, say (a), then the other leaf is going to be killed
+	   and its parent, the other survivor besides (n-1) will be recorded as
+	   the last element of the code.
+	6. The case where it WASN'T a leaf is slightly more complicated. We shall
+	   prove that the other survivor can be nothing but (n-2).
+	7. Notice that since there are always at least 2 leaves in any tree
+	   we're interested in, the only case where (n-2) could be removed is
+	   when it's compared only to (n-1). So there must be only two leaves
+	   in the tree: one is (n-2) and the other (n-1). But this means that
+	   (n-1) is a leaf. This cannot possibly happen because we're considering
+	   the case where it isn't. """
 	def make_edge(node1, node2):
 		tree[node1].append(node2)
 		tree[node2].append(node1)
@@ -269,7 +291,9 @@ def prufer_to_tree(prufer):
 	else:
 		make_edge(n - 1, prufer[-1])
 
-	largest_absent = n - 2 # may be not true at the moment, but we don't care
+	# largest_absent is updated on the go, so it's sufficient only to make it
+	# larger than the real index of the largest absent element
+	largest_absent = n - 2
 	for i in reversed(xrange(n - 2)):
 		# if (i-1)th element is already there
 		# a special case is the last edge
