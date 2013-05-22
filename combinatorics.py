@@ -270,16 +270,15 @@ def prufer_to_tree(prufer):
 		make_edge(n - 1, prufer[-1])
 
 	largest_absent = n - 2 # may be not true at the moment, but we don't care
-	for i in reversed(xrange(1, n - 2)):
-		if tree[prufer[i - 1]]: # if (i-1)th element is already there
+	for i in reversed(xrange(n - 2)):
+		# if (i-1)th element is already there
+		# a special case is the last edge
+		if i == 0 or tree[prufer[i - 1]]:
 			while tree[largest_absent]: # update largest_absent
 				largest_absent -= 1
 			make_edge(largest_absent, prufer[i])
 		else:
 			make_edge(prufer[i - 1], prufer[i])
-	while tree[largest_absent]:
-			largest_absent -= 1
-	make_edge(largest_absent, prufer[0])
 
 	return tree
 
