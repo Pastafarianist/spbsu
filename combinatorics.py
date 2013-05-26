@@ -277,7 +277,9 @@ def prufer_to_tree(prufer):
 	   when it's compared only to (n-1). So there must be only two leaves
 	   in the tree: one is (n-2) and the other (n-1). But this means that
 	   (n-1) is a leaf. This cannot possibly happen because we're considering
-	   the case where it isn't. """
+	   the case where it isn't.
+	I have no idea how to explain the condition within the main loop.
+	Contact me if you can clarify that. """
 	def make_edge(node1, node2):
 		tree[node1].append(node2)
 		tree[node2].append(node1)
