@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Norm</title>
+</head>
+<body>
+<a href="http://jsfiddle.net/Pastafarianist/tznt2ko8/">Online version</a>
+<script src="numeric-1.2.6.min.js"></script>
+<script type="text/javascript">
+str = numeric.prettyPrint;
+numeric.precision = 4;
+
+function print(s) {
+    document.getElementsByTagName("body")[0].innerHTML += '<pre>' + s + '</pre>';
+}
+
+function pprint(obj) {
+    print(str(obj));
+}
+
+function inverse2x2(A) {
+    var a = A[0][0],
+        b = A[0][1],
+        c = A[1][0],
+        d = A[1][1];
+    var det = a * d - b * c;
+    // console.log(det);
+    if (det === 0) {
+        throw "Matrix determinant is zero";
+    } else {
+        return [[d / det, -b / det], [-c / det, a / det]];
+    }
+}
+
+function matrixNormInf(A) {
+    var best = 0;
+    for (var i = 0; i < A.length; i++) {
+        var sum = 0;
+        for (var j = 0; j < A[i].length; j++) {
+            sum += Math.abs(A[i][j]);
+        }
+        if (sum > best) {
+            best = sum;
+        }
+    }
+    return best;
+}
+
+vectorNorm = numeric.norminf;
+matrixNorm = matrixNormInf;
+
+A = [
+    [2, 4],
+    [3, 5]
+];
+
+Ainv = inverse2x2(A);
+print('A = \n' + str(A));
+print('A^-1 = \n' + str(Ainv));
+
+b1 = [200, -600];
+x1 = numeric.dot(Ainv, b1);
+print('x1 = ' + str(x1));
+
+b2 = [199, -601];
+x2 = numeric.dot(Ainv, b2);
+print('x2 = ' + str(x2));
+
+cond = matrixNorm(inverse2x2(A)) * matrixNorm(A);
+print('cond(A) = ' + str(cond));
+
+dx = vectorNorm(numeric.sub(x1, x2)) / vectorNorm(x1);
+est = cond * vectorNorm(numeric.sub(b1, b2)) / vectorNorm(b1);
+
+print('dx = ' + str(dx));
+print('upper bound on dx = ' + str(est));
+</script>
+</body>
+</html>
