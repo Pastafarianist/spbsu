@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Gauss</title>
+</head>
+<body>
+<a href="http://jsfiddle.net/Pastafarianist/43rcfxwt/">Online version</a>
+<script src="sprintf.min.js"></script>
+<script src="numeric-1.2.6.min.js"></script>
+<script type="text/javascript">
+str = numeric.prettyPrint;
+
+function print(s) {
+    document.getElementsByTagName("body")[0].innerHTML += '<pre>' + s + '</pre>';
+}
+
+function pprint(obj) {
+    print(str(obj));
+}
+
+function matrixNormInf(A) {
+    var best = 0;
+    for (var i = 0; i < A.length; i++) {
+        var sum = 0;
+        for (var j = 0; j < A[i].length; j++) {
+            sum += Math.abs(A[i][j]);
+        }
+        if (sum > best) {
+            best = sum;
+        }
+    }
+    return best;
+}
+
+vectorNorm = numeric.norminf;
+matrixNorm = matrixNormInf;
+
+function cond(A) {
+    return matrixNorm(numeric.inv(A)) * matrixNorm(A);
+}
+
+function solveGauss(Ab, eps) {
+    // Expecting an Nx(N+1) matrix.
+    Ab = numeric.clone(Ab);
+    var n = Ab.length;
+    // forward pass
+    for (var k = 0; k < n; k++) {
+        var tmp = Ab[k][k];
+        if (Math.abs(tmp) < eps) {
+            console.log(sprintf('Leading element at k=%d is too small: tmp=%f, eps=%f', k, tmp, eps));
+        }
+        for (var j = k; j < n + 1; j++) {
+            Ab[k][j] /= tmp;
+        }
+        for (var i = k + 1; i < n; i++) {
+            tmp = Ab[i][k];
+            for (var j = k; j < n + 1; j++) {
+                Ab[i][j] -= tmp * Ab[k][j];
+            }
+        }
+    }
+    console.log('after Gauss forward pass:\n' + str(Ab));
+    // backward pass
+    var x = numeric.rep([n], 0); // creating an empty array like that for clarity
+    for (var k = n - 1; k >= 0; k--) {
+        x[k] = Ab[k][n];
+        for (var j = k + 1; j < n; j++) {
+            x[k] -= Ab[k][j] * x[j];
+        }
+    }
+    return x;
+}
+
+function inverseGauss(A, eps) {
+    // Expecting an Nx(N+1) matrix.
+    A = numeric.clone(A);
+    var n = A.length;
+    var result = numeric.identity(n);
+    for (var k = 0; k < n; k++) {
+        var tmp = Ab[k][k];
+        if (Math.abs(tmp) < eps) {
+            console.log(sprintf('Leading element at k=%d is too small: tmp=%f, eps=%f', k, tmp, eps));
+        }
+        for (var j = k; j < n; j++) {
+            A[k][j] /= tmp;
+        }
+        for (var j = 0; j < n; j++) {
+            result[k][j] /= tmp;
+        }
+        for (var i = k + 1; i < n; i++) {
+            tmp = A[i][k];
+            for (var j = k; j < n; j++) {
+                A[i][j] -= tmp * A[k][j];
+            }
+            for (var j = 0; j < n; j++) {
+                result[i][j] -= tmp * result[k][j];
+            }
+        }
+    }
+    return result;
+}
+
+// function inverseGauss(A, eps) {
+//     var n = A.length;
+//     var result = numeric.rep([n, n], 0);
+//     var Aext = numeric.rep([n, n + 1], 0);
+//     for (var i = 0; i < n; i++) {
+//         for (var j = 0; j < n; j++) {
+//             Aext[i][j] = A[i][j];
+//         }
+//     }
+//     for (var k = 0; k < n; k++) {
+//         // the following loop is very redundant, but makes it clear what's happening
+//         for (var i = 0; i < n; i++) {
+//             Aext[i][n] = 0;
+//         }
+//         Aext[k][n] = 1;
+//         col = solveGauss(Aext, eps);
+//         for (var i = 0; i < n; i++) {
+//             result[i][k] = col[i];
+//         }
+//     }
+//     return result;
+// }
+
+function LUdecomposition(A) {
+    // assuming a square NxN matrix
+    var n = A.length;
+    var L = numeric.rep([n, n], 0);
+    var U = numeric.rep([n, n], 0);
+    for (var i = 0; i < n; i++) {
+        for (var j = i; j < n; j++) {
+            var sum1 = 0;
+            for (var k = 0; k < j; k++) {
+                sum1 += L[j][k] * U[k][i];
+            }
+            L[j][i] = A[j][i] - sum1;
+            var sum2 = 0;
+            for (var k = 0; k < i; k++) {
+                sum2 += L[i][k] * U[k][j];
+            }
+            U[i][j] = (A[i][j] - sum2) / L[i][i];
+        }
+    }
+    return [L, U];
+}
+
+function solveLU(A, b) {
+    var n = A.length;
+    var LU = LUdecomposition(A);
+    var L = LU[0];
+    var U = LU[1];
+    // solving Ly = b
+    var y = numeric.rep([n], 0);
+    for (var i = 0; i < n; i++) {
+        y[i] = b[i];
+        for (var j = 0; j < i; j++) {
+            y[i] -= L[i][j] * y[j];
+        }
+        y[i] /= L[i][i]; // diagonal elements should not be zero
+    }
+    console.log('solved Ly = b, y = ' + str(y));
+    // solving Ux = y
+    var x = numeric.rep([n], 0);
+    for (var i = n - 1; i >= 0; i--) {
+        x[i] = y[i];
+        for (var j = i + 1; j < n; j++) {
+            x[i] -= U[i][j] * x[j];
+        }
+    }
+    return x;
+}
+
+function solveGaussAnchored(Ab, anchorLocation) {
+    // Expecting an Nx(N+1) matrix.
+    // anchorLocation is one of: row, column, both
+    Ab = numeric.clone(Ab);
+    var n = Ab.length;
+    var vord = numeric.linspace(0, n - 1);
+    // forward pass
+    for (var k = 0; k < n; k++) {
+        // finding anchor
+        var maxVal = Math.abs(A[k][k]);
+        var maxCol = k,
+            maxRow = k;
+        if (anchorLocation == 'both') {
+            for (var i = k; i < n; i++) {
+                for (var j = k; j < n; j++) {
+                    var curVal = Math.abs(Ab[i][j]);
+                    if (curVal > maxVal) {
+                        maxVal = curVal;
+                        maxRow = i;
+                        maxCol = j;
+                    }
+                }
+            }
+        } else if (anchorLocation == 'row') {
+            for (var j = k + 1; j < n; j++) {
+                var curVal = Math.abs(Ab[k][j]);
+                if (curVal > maxVal) {
+                    maxVal = curVal;
+                    maxCol = j;
+                }
+            }
+        } else if (anchorLocation == 'column') {
+            for (var i = k + 1; i < n; i++) {
+                var curVal = Math.abs(Ab[i][k]);
+                if (curVal > maxVal) {
+                    maxVal = curVal;
+                    maxRow = i;
+                }
+            }
+        }
+        // swapping cols
+        if (k != maxCol) {
+            var tmp = vord[k];
+            vord[k] = vord[maxCol];
+            vord[maxCol] = tmp;
+            for (var i = 0; i < n; i++) {
+                tmp = Ab[i][k];
+                Ab[i][k] = Ab[i][maxCol];
+                Ab[i][maxCol] = tmp;
+            }
+        }
+        // swapping rows
+        if (k != maxRow) {
+            var tmp = Ab[k];
+            Ab[k] = Ab[maxRow];
+            Ab[maxRow] = tmp;
+        }
+        var tmp = Ab[k][k];
+        for (var j = k; j < n + 1; j++) {
+            Ab[k][j] /= tmp;
+        }
+        for (var i = k + 1; i < n; i++) {
+            tmp = Ab[i][k];
+            for (var j = k; j < n + 1; j++) {
+                Ab[i][j] -= tmp * Ab[k][j];
+            }
+        }
+    }
+    console.log('after Gauss forward pass:\n' + str(Ab));
+    // backward pass
+    var x = numeric.rep([n], 0);
+    for (var k = n - 1; k >= 0; k--) {
+        x[vord[k]] = Ab[k][n];
+        for (var j = k + 1; j < n; j++) {
+            x[vord[k]] -= Ab[k][j] * x[vord[j]];
+        }
+    }
+    return x;
+}
+
+function solutionError(A, b, x) {
+    return numeric.sub(numeric.dot(A, x), b);
+}
+
+var A = numeric.random([4, 4]);
+var b = numeric.random([4]);
+
+//var A = [
+//    [2, 4],
+//    [3, 5]
+//];
+
+//var b = [200, -600];
+
+var Ab = numeric.transpose(A);
+Ab.push(b);
+Ab = numeric.transpose(Ab);
+
+print('Ab = \n' + str(Ab));
+print('cond(A) = ' + str(cond(A)));
+var x;
+
+x = numeric.solve(A, b);
+print('solution found with numeric.solve is:\n' + str(x));
+print('error = ' + str(solutionError(A, b, x)));
+
+x = solveGauss(Ab, 0.0001);
+print('solution found with Gauss method is:\n' + str(x));
+print('error = ' + str(solutionError(A, b, x)));
+
+print('inverse found with Gauss method is:\n' + str(inverseGauss(A, 0.0001)));
+print('inverse found with numeric.inv is:\n' + str(numeric.inv(A, 0.0001)));
+
+LU = LUdecomposition(A);
+print('L of LU decomposition of A:\n' + str(LU[0]));
+print('U of LU decomposition of A:\n' + str(LU[1]));
+print('L * U = \n' + str(numeric.dot(LU[0], LU[1])));
+
+x = solveLU(A, b);
+print('solution found with LU decomposition:\n' + str(x));
+print('error = ' + str(solutionError(A, b, x)));
+
+x = solveGaussAnchored(Ab, 'both');
+print('solution found with anchored Gauss:\n' + str(x));
+print('error = ' + str(solutionError(A, b, x)));
+
+C = numeric.clone(A);
+C[0][0] *= 1e-8;
+Cb = numeric.clone(Ab);
+Cb[0][0] *= 1e-8;
+
+print('Cb = \n' + str(Cb));
+
+x = solveGauss(Cb, 0.0001);
+print('solution found with Gauss method is:\n' + str(x));
+print('error = ' + str(solutionError(C, b, x)));
+
+x = solveGaussAnchored(Cb, 'both');
+print('solution found with anchored Gauss:\n' + str(x));
+print('error = ' + str(solutionError(C, b, x)));
+</script>
+</body>
+</html>
