@@ -1,12 +1,13 @@
 from __future__ import division
 import numpy as np
+import unittest
 
 def eigen_jacobi(a, eps):
 	n = len(a)
 	if n <= 1:
 		return a
 
-	vectors = np.identity(len(a), dtype=np.float32)
+	eigenvectors = np.identity(len(a), dtype=np.float32)
 	while True:
 		max_a = float('-inf')
 		max_i, max_j = None, None
@@ -23,7 +24,7 @@ def eigen_jacobi(a, eps):
 		diff = a[max_i, max_i] - a[max_j, max_j]
 		d = np.sqrt(np.abs(diff)**2 + 4 * a[max_i, max_j]**2)
 		c = np.sqrt(0.5 * (1 + np.abs(diff) / d))
-		s = np.sign(a[max_i, max_j] * diff) * np.sqrt(0.5 * (1 - np.abs(diff) / d))
+		s = (1 if (a[max_i, max_j] * diff) >= 0 else -1) * np.sqrt(0.5 * (1 - np.abs(diff) / d))
 
 		new_aii = c**2 * a[max_i, max_i] + 2 * c * s * a[max_i, max_j] + s**2 * a[max_j, max_j]
 		new_ajj = s**2 * a[max_i, max_i] - 2 * c * s * a[max_i, max_j] + c**2 * a[max_j, max_j]
@@ -46,51 +47,68 @@ def eigen_jacobi(a, eps):
 		a[max_i, max_j] = 0
 		a[max_j, max_i] = 0
 
-		for j in xrange(n):
-			vectors[j, max_i] = c * vectors[max_i, j] + s * vectors[max_j, j]
+		old_max_i = eigenvectors[max_i, :].copy()
+		old_max_j = eigenvectors[max_j, :].copy()
 
 		for j in xrange(n):
-			vectors[j, max_j] = -s * vectors[max_i, j] + c * vectors[max_j, j]
+			eigenvectors[j, max_i] = c * old_max_i[j] + s * old_max_j[j]
+
+		for j in xrange(n):
+			eigenvectors[j, max_j] = -s * old_max_i[j] + c * old_max_j[j]
 
 	# eigenvalues = np.float32([a[i, i] + sum(a[i, j] / (a[i, i] - a[j, j]) for j in xrange(n) if j != i) for i in xrange(n)])
 	eigenvalues = np.float32([a[i, i] for i in xrange(n)])
 
-	return a, eigenvalues, vectors
+	return a, eigenvalues, eigenvectors
 
 
-np.set_printoptions(precision=6)
+class TestAll(unittest.TestCase):
+	def setUp(self):
+		np.set_printoptions(precision=6)
+		self.eps =  0.000001
 
-# matrix #6
-a = np.float32([
-	[-0.93016, -0.25770, 0.45254],
-	[-0.25770, 0.65022, 0.07193],
-	[0.45255, 0.07193, -0.97112]
-])
+	def go(self, a):
+		print('Original matrix:')
+		print(a)
 
-a = np.float32([
-	[1, 2],
-	[2, 1]
-])
+		print('Numpy\'s eigenvalues and eigenvectors:')
+		w, v = np.linalg.eig(a)
+		idx = w.argsort()   
+		w = w[idx]
+		v = v[:,idx]
 
-w, v = np.linalg.eig(a)
-idx = w.argsort()   
-w = w[idx]
-v = v[:,idx]
+		print(w)
+		print(v)
 
-print('Numpy\'s eigenvalues and eigenvectors:')
-print(w)
-print(v)
+		print('My eigenvalues and eigenvectors:')
+		a, eigenvalues, eigenvectors = eigen_jacobi(a, self.eps)
+		idx = eigenvalues.argsort()   
+		eigenvalues = eigenvalues[idx]
+		eigenvectors = eigenvectors[:,idx]
 
-eps =  0.000001
+		print(eigenvalues)
+		print(eigenvectors)
 
-a, eigenvalues, vectors = eigen_jacobi(a, eps)
-idx = eigenvalues.argsort()   
-eigenvalues = eigenvalues[idx]
-vectors = vectors[:,idx]
+		print('Transformed matrix:')
+		print(a)
+		print('')
 
-print('My eigenvalues and eigenvectors:')
-print(eigenvalues)
-print(vectors)
+	def testSimple(self):
+		a = np.float32([
+			[1, 2],
+			[2, 1]
+		])
+		self.go(a)
 
-print('Transformed matrix:')
-print(a)
+	def testStandard(self):
+		# matrix #6
+		a = np.float32([
+			[-0.93016, -0.25770, 0.45254],
+			[-0.25770, 0.65022, 0.07193],
+			[0.45255, 0.07193, -0.97112]
+		])
+		self.go(a)
+		
+
+if __name__ == '__main__':
+	unittest.main()
