@@ -1,37 +1,48 @@
 from __future__ import division
 import numpy as np
+import matplotlib.pyplot as plt
 
 def sweep(A, B, C, G):
 	n = len(G) - 1
-	s = np.empty(n + 1, dtype=np.float)
-	t = np.empty(n + 1, dtype=np.float)
-	s[0] = C[0] / B[0]
-	t[0] = -G[0] / B[0]
+	S = np.empty(n + 1, dtype=np.float)
+	T = np.empty(n + 1, dtype=np.float)
+	Y = np.empty(n + 1, dtype=np.float)
+	
+	S[0] = C[0] / B[0]
+	T[0] = -G[0] / B[0]
 
 	for i in xrange(1, n + 1):
-		s[i] = C[i] / (B[i] - A[i] * s[i - 1])
-		t[i] = (A[i] * t[i - 1] - G[i]) / (B[i] - A[i] * s[i - 1])
+		denom = B[i] - A[i] * S[i - 1]
+		S[i] = C[i] / denom
+		T[i] = (A[i] * T[i - 1] - G[i]) / denom
 
-	y = np.empty(n + 1, dtype=np.float)
-	y[n] = t[n]
+	Y[n] = T[n]
 
 	for i in xrange(n - 1, -1, -1):
-		y[i] = s[i] * y[i + 1] + t[i]
+		Y[i] = S[i] * Y[i + 1] + T[i]
 
-	return s, t, y
+	for i, (a, b, c, g) in enumerate(zip(A, B, C, G)):
+		ss = - b * Y[i] - g
+		if i >= 1:
+			ss += a * Y[i - 1]
+		if i <= len(Y) - 2:
+			ss += c * Y[i + 1]
+		if abs(ss) > 1e-8:
+			print 'Failure at i=%d: %.4f' % (i, ss)
 
-def make_coefficients(p, q, r, f, a, b, n, prec, alphas, betas):
-	num_points = n + 1 + (prec - 1)
+	return S, T, Y
+
+def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
+	num_points = (n + 1) + (1 if prec == 2 else 0)
+	h = (b - a) / n
 
 	A = np.zeros(num_points, dtype=np.float)
 	B = np.zeros(num_points, dtype=np.float)
 	C = np.zeros(num_points, dtype=np.float)
 	G = np.zeros(num_points, dtype=np.float)
 
-	h = (b - a) / n
-
 	if prec == 1:
-		xs = np.arange(0, num_points) * h + a
+		xs = np.linspace(a, b, num_points)
 		
 		B[0] = -(alphas[1] + alphas[2] / h)
 		C[0] = -(alphas[2] / h)
@@ -42,7 +53,7 @@ def make_coefficients(p, q, r, f, a, b, n, prec, alphas, betas):
 		G[-1] = betas[0]
 
 	elif prec == 2:
-		xs = np.arange(0, num_points) * h + a - h / 2
+		xs = np.linspace(a - h / 2, b + h / 2, num_points)
 
 		B[0] = -(alphas[1] / 2 + alphas[2] / h)
 		C[0] = (alphas[1] / 2 - alphas[2] / h)
@@ -52,30 +63,76 @@ def make_coefficients(p, q, r, f, a, b, n, prec, alphas, betas):
 		B[-1] = -(betas[1] / 2 + betas[2] / h)
 		G[-1] = betas[0]
 
+	# print(B[0], C[0], G[0])
+	# print(A[-1], B[-1], G[-1])
+
 	for i in xrange(1, num_points - 1):
 		G[i] = f(xs[i])
-		A[i] = -p(xs[i]) / h**2 + q(xs[i]) / (2*h)
-		B[i] = -((2*p(xs[i]) / h**2 + r(xs[i])))
-		C[i] = A[i]
+		A[i] = -p(xs[i]) / h**2 - q(xs[i]) / (2*h)
+		B[i] = -(2*p(xs[i]) / h**2 + r(xs[i]))
+		C[i] = -p(xs[i]) / h**2 + q(xs[i]) / (2*h)
+
+	if prec == 2:
+		xs = np.linspace(a, b, n + 1)
 
 	return xs, A, B, C, G
 
-n = 10
+def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
+	print('Solution with n=%d nodes and precision O(h^%d)' % (n, prec))
+
+	xs, A, B, C, G = make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec)
+	S, T, Y = sweep(A, B, C, G)
+
+	if refine:
+		error = Y[]
+
+	print(''.join('%12s' % s for s in ('xabcgstye')))
+	for vals in zip(xs, A, B, C, G, S, T, Y, exact[1]):
+		print ''.join('%12.5f' % v for v in vals)
+
+	plt.plot(xs, Y, color=color)
+
+
 a, b = -1, 1
 
-p = lambda x: (x - 2) / (x + 2)
-q = lambda x: x
-r = lambda x: 1 - np.sin(x)
-f = lambda x: x**2
+p = lambda x: - (4 + x) / (5 + 2*x)
+q = lambda x: (1 - x / 2)
+r = lambda x: 1 + np.exp(x / 2)
+f = lambda x: 2 + x
 
-alphas = 0, 1, 0 # al1 y(a) - al2 y(b) = alpha
-betas  = 0, 1, 0 # be1 y(a) + be2 y(b) = beta
+alphas = 0, 0, -1 # a1 y(a) - a2 y(b) = a0
+betas  = 0, 2, 1  # b1 y(a) + b2 y(b) = b0
 
-prec = 2
+exact_x = np.linspace(a, b, 21)
+exact_y = [
+	0.792652687899232,
+	0.793975084414089,
+	0.797749914679873,
+	0.803657498604232,
+	0.811334431253817,
+	0.820370146741282,
+	0.830302096587725,
+	0.840609228831236,
+	0.850703312815609,
+	0.859917430959906,
+	0.867490798166806,
+	0.872548887919095,
+	0.874077624353127,
+	0.870889750233535,
+	0.861581531576143,
+	0.844476987975402,
+	0.817556181903231,
+	0.778363536462625,
+	0.723890317314835,
+	0.650424585398997,
+	0.553359085653240
+]
+exact = (exact_x, exact_y)
+plt.plot(exact[0], exact[1], color='r')
 
-xs, A, B, C, G = make_coefficients(p, q, r, f, a, b, n, prec, alphas, betas)
-S, T, Y = sweep(A, B, C, G)
+plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=1, refine=False, color='b')
+plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=1, refine=True, color='g')
+# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=2, refine=False, color='c')
+# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=2, refine=True, color='m')
 
-print(''.join('%12s' % s for s in ('xabcgsty')))
-for vals in zip(xs, A, B, C, G, S, T, Y):
-	print ''.join('%12.5f' % v for v in vals)
+plt.show()
