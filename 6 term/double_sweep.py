@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 def sweep(A, B, C, G):
 	n = len(G) - 1
-	S = np.empty(n + 1, dtype=np.float)
-	T = np.empty(n + 1, dtype=np.float)
-	Y = np.empty(n + 1, dtype=np.float)
+	S = np.empty(n + 1)
+	T = np.empty(n + 1)
+	Y = np.empty(n + 1)
 	
 	S[0] = C[0] / B[0]
 	T[0] = -G[0] / B[0]
@@ -36,10 +36,10 @@ def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
 	num_points = (n + 1) + (1 if prec == 2 else 0)
 	h = (b - a) / n
 
-	A = np.zeros(num_points, dtype=np.float)
-	B = np.zeros(num_points, dtype=np.float)
-	C = np.zeros(num_points, dtype=np.float)
-	G = np.zeros(num_points, dtype=np.float)
+	A = np.zeros(num_points)
+	B = np.zeros(num_points)
+	C = np.zeros(num_points)
+	G = np.zeros(num_points)
 
 	if prec == 1:
 		xs = np.linspace(a, b, num_points)
@@ -72,22 +72,25 @@ def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
 		B[i] = -(2*p(xs[i]) / h**2 + r(xs[i]))
 		C[i] = -p(xs[i]) / h**2 + q(xs[i]) / (2*h)
 
-	if prec == 2:
-		xs = np.linspace(a, b, n + 1)
-
 	return xs, A, B, C, G
 
 def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
-	print('Solution with n=%d nodes and precision O(h^%d)' % (n, prec))
-
 	xs, A, B, C, G = make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec)
 	S, T, Y = sweep(A, B, C, G)
 
-	if refine:
-		error = Y[]
+	if prec == 2:
+		# moving to the original grid
+		xs = np.linspace(a, b, n + 1)
+		Y = (Y[1:] + Y[:-1]) / 2
 
+	# if refine:
+	# 	error = 
+
+	exact_y = exact[1][::((len(exact[1]) - 1) // (len(Y) - 1))]
+
+	print('Solution with n=%d nodes and precision O(h^%d)' % (n, prec))
 	print(''.join('%12s' % s for s in ('xabcgstye')))
-	for vals in zip(xs, A, B, C, G, S, T, Y, exact[1]):
+	for vals in zip(xs, A, B, C, G, S, T, Y, exact_y):
 		print ''.join('%12.5f' % v for v in vals)
 
 	plt.plot(xs, Y, color=color)
@@ -128,11 +131,11 @@ exact_y = [
 	0.553359085653240
 ]
 exact = (exact_x, exact_y)
-plt.plot(exact[0], exact[1], color='r')
+plt.plot(exact_x, exact_y, color='r')
 
 plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=1, refine=False, color='b')
 plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=1, refine=True, color='g')
-# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=2, refine=False, color='c')
-# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=2, refine=True, color='m')
+plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=2, refine=False, color='c')
+plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=2, refine=True, color='m')
 
 plt.show()
