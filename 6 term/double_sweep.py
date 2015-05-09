@@ -33,6 +33,9 @@ def sweep(A, B, C, D):
 		if abs(ss) > 1e-8:
 			print 'Failure at i=%d: %.4f' % (i, ss)
 
+	S = -S
+	T = -T
+
 	return S, T, Y
 
 def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
