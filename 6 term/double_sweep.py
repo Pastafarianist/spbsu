@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def sweep(A, B, C, D):
+	B = -B
+
 	n = len(D) - 1
 	S = np.empty(n + 1)
 	T = np.empty(n + 1)
@@ -21,6 +23,7 @@ def sweep(A, B, C, D):
 	for i in xrange(n - 1, -1, -1):
 		Y[i] = S[i] * Y[i + 1] + T[i]
 
+	# Testing
 	for i, (a, b, c, g) in enumerate(zip(A, B, C, D)):
 		ss = b * Y[i] - g
 		if i >= 1:
@@ -73,6 +76,8 @@ def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
 		B[i] = -2*pi / h**2 + ri
 		C[i] = pi / h**2 + qi / (2*h)
 		D[i] = fi
+
+	B = -B
 
 	return xs, A, B, C, D
 
