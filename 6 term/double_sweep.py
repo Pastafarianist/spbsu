@@ -2,27 +2,27 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 
-def sweep(A, B, C, G):
-	n = len(G) - 1
+def sweep(A, B, C, D):
+	n = len(D) - 1
 	S = np.empty(n + 1)
 	T = np.empty(n + 1)
 	Y = np.empty(n + 1)
 	
-	S[0] = C[0] / B[0]
-	T[0] = -G[0] / B[0]
+	S[0] = -C[0] / B[0]
+	T[0] = D[0] / B[0]
 
 	for i in xrange(1, n + 1):
-		denom = B[i] - A[i] * S[i - 1]
-		S[i] = C[i] / denom
-		T[i] = (A[i] * T[i - 1] - G[i]) / denom
+		denom = B[i] + A[i] * S[i - 1]
+		S[i] = -C[i] / denom
+		T[i] = (-A[i] * T[i - 1] + D[i]) / denom
 
 	Y[n] = T[n]
 
 	for i in xrange(n - 1, -1, -1):
 		Y[i] = S[i] * Y[i + 1] + T[i]
 
-	for i, (a, b, c, g) in enumerate(zip(A, B, C, G)):
-		ss = - b * Y[i] - g
+	for i, (a, b, c, g) in enumerate(zip(A, B, C, D)):
+		ss = b * Y[i] - g
 		if i >= 1:
 			ss += a * Y[i - 1]
 		if i <= len(Y) - 2:
@@ -39,44 +39,46 @@ def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
 	A = np.zeros(num_points)
 	B = np.zeros(num_points)
 	C = np.zeros(num_points)
-	G = np.zeros(num_points)
+	D = np.zeros(num_points)
 
 	if prec == 1:
 		xs = np.linspace(a, b, num_points)
 		
-		B[0] = -(alphas[1] + alphas[2] / h)
-		C[0] = -(alphas[2] / h)
-		G[0] = alphas[0]
+		B[0] = alphas[0] * h - alphas[1]
+		C[0] = alphas[1]
+		D[0] = alphas[2] * h
 
-		A[-1] = -(betas[2] / h)
-		B[-1] = -(betas[1] + betas[2] / h)
-		G[-1] = betas[0]
+		A[-1] = -betas[1]
+		B[-1] = betas[0] * h + betas[1]
+		D[-1] = betas[2] * h
 
 	elif prec == 2:
+		raise NotImplementedError
 		xs = np.linspace(a - h / 2, b + h / 2, num_points)
 
 		B[0] = -(alphas[1] / 2 + alphas[2] / h)
 		C[0] = (alphas[1] / 2 - alphas[2] / h)
-		G[0] = alphas[0]
+		D[0] = alphas[0]
 
 		A[-1] = (betas[1] / 2 - betas[2] / h)
 		B[-1] = -(betas[1] / 2 + betas[2] / h)
-		G[-1] = betas[0]
+		D[-1] = betas[0]
 
-	# print(B[0], C[0], G[0])
-	# print(A[-1], B[-1], G[-1])
+	# print(B[0], C[0], D[0])
+	# print(A[-1], B[-1], D[-1])
 
 	for i in xrange(1, num_points - 1):
-		G[i] = f(xs[i])
-		A[i] = -p(xs[i]) / h**2 - q(xs[i]) / (2*h)
-		B[i] = -(2*p(xs[i]) / h**2 + r(xs[i]))
-		C[i] = -p(xs[i]) / h**2 + q(xs[i]) / (2*h)
+		pi, qi, ri, fi = p(xs[i]), q(xs[i]), r(xs[i]), f(xs[i])
+		A[i] = pi / h**2 - qi / (2*h)
+		B[i] = -2*pi / h**2 + ri
+		C[i] = pi / h**2 + qi / (2*h)
+		D[i] = fi
 
-	return xs, A, B, C, G
+	return xs, A, B, C, D
 
 def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
-	xs, A, B, C, G = make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec)
-	S, T, Y = sweep(A, B, C, G)
+	xs, A, B, C, D = make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec)
+	S, T, Y = sweep(A, B, C, D)
 
 	if prec == 2:
 		# moving to the original grid
@@ -89,8 +91,8 @@ def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
 	exact_y = exact[1][::((len(exact[1]) - 1) // (len(Y) - 1))]
 
 	print('Solution with n=%d nodes and precision O(h^%d)' % (n, prec))
-	print(''.join('%12s' % s for s in ('xabcgstye')))
-	for vals in zip(xs, A, B, C, G, S, T, Y, exact_y):
+	print(''.join('%12s' % s for s in ('xabcdstye')))
+	for vals in zip(xs, A, B, C, D, S, T, Y, exact_y):
 		print ''.join('%12.5f' % v for v in vals)
 
 	plt.plot(xs, Y, color=color)
@@ -103,8 +105,8 @@ q = lambda x: (1 - x / 2)
 r = lambda x: 1 + np.exp(x / 2)
 f = lambda x: 2 + x
 
-alphas = 0, 0, -1 # a1 y(a) - a2 y(b) = a0
-betas  = 0, 2, 1  # b1 y(a) + b2 y(b) = b0
+alphas = 0, 1, 0 # a0 y(a) + a1 y(b) = a2
+betas  = 2, 1, 0 # b0 y(a) + b1 y(b) = b2
 
 exact_x = np.linspace(a, b, 21)
 exact_y = [
@@ -135,7 +137,7 @@ plt.plot(exact_x, exact_y, color='r')
 
 plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=1, refine=False, color='b')
 plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=1, refine=True, color='g')
-plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=2, refine=False, color='c')
-plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=2, refine=True, color='m')
+# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=10, prec=2, refine=False, color='c')
+# plot_for(p, q, r, f, a, b, alphas, betas, exact, n=20, prec=2, refine=True, color='m')
 
 plt.show()
