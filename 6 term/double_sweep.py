@@ -83,7 +83,7 @@ def make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec):
 
 	return xs, A, B, C, D
 
-def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
+def solve_for(p, q, r, f, a, b, alphas, betas, n, prec):
 	xs, A, B, C, D = make_coefficients(p, q, r, f, a, b, alphas, betas, n, prec)
 	S, T, Y = sweep(A, B, C, D)
 
@@ -92,15 +92,23 @@ def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
 		xs = np.linspace(a, b, n + 1)
 		Y = (Y[1:] + Y[:-1]) / 2
 
-	# if refine:
-	# 	error = 
+	return xs, A, B, C, D, S, T, Y
+
+def plot_for(p, q, r, f, a, b, alphas, betas, exact, n, prec, refine, color):
+	xs, A, B, C, D, S, T, Y = solve_for(p, q, r, f, a, b, alphas, betas, n, prec)
+
+	if refine:
+		_xs, _A, _B, _C, _D, _S, _T, _Y = solve_for(p, q, r, f, a, b, alphas, betas, n * 2, prec)
+		_Y = _Y[::2]
+		R = (_Y - Y) / (2**prec - 1)
+		Y = _Y + R
 
 	exact_y = exact[1][::((len(exact[1]) - 1) // (len(Y) - 1))]
 
 	print('Solution with n=%d nodes and precision O(h^%d)' % (n, prec))
 	print(''.join('%12s' % s for s in ('xABCGstyeD')))
 	for vals in zip(xs, A, B, C, D, S, T, Y, exact_y, Y - exact_y):
-		print ''.join('%12.5f' % v for v in vals)
+		print ''.join('%12.7f' % v for v in vals)
 
 	plt.plot(xs, Y, color=color)
 
