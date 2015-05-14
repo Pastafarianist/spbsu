@@ -30,6 +30,7 @@ def solve_fredholm(a, b, H, f, xs, A):
 
 	g = np.array([f(x) for x in xs])
 	z = np.linalg.solve(D, g)
+
 	u = lambda x: f(x) + sum(A[k] * H(x, xs[k]) * z[k] for k in xrange(m))
 	return u
 	
@@ -38,13 +39,19 @@ a, b = 0, 1
 H = lambda x, y: 0.5 * np.tanh(x * y)
 f = lambda x: x - 0.5
 
-subdivisions = 5
+def calc_for(subdivisions):
+	xs, A = build_simpson(a, b, subdivisions)
+	u = solve_fredholm(a, b, H, f, xs, A)
 
-xs, A = build_simpson(a, b, subdivisions)
-u = solve_fredholm(a, b, H, f, xs, A)
+	plt_xs = np.linspace(a, b, 2 * subdivisions + 1)
+	plt_ys = u(plt_xs)
+	return plt_xs, plt_ys
 
-plt_xs = np.linspace(a, b, 50)
-plt.plot(plt_xs, u(plt_xs))
-plt.ylim((-1, 1))
-plt.grid(True)
-plt.show()
+for subdivisions in xrange(1, 11):
+	plt_xs, plt_ys = calc_for(subdivisions)
+	print(plt_ys[-1])
+
+# plt.plot(plt_xs, plt_ys)
+# plt.ylim((-1, 1))
+# plt.grid(True)
+# plt.show()
