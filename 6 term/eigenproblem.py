@@ -91,7 +91,7 @@ class TestAll(unittest.TestCase):
 
 		print('Transformed matrix:')
 		print(a)
-		print('')
+		print()
 
 	def testSimple(self):
 		a = np.float32([
