@@ -37,8 +37,8 @@ confidenceIntervalCoefficients <- function (X, rv, Theta, alpha) {
 confidenceIntervalVariance <- function (rss, X, alpha) {
   n <- nrow(X)
   m <- ncol(X)
-  left <- rss / qchisf(1 - alpha / 2, n - m)
-  right <- rss / qchisf(alpha / 2, n - m)
+  left <- rss / qchisq(1 - alpha / 2, n - m)
+  right <- rss / qchisq(alpha / 2, n - m)
   return(cbind(left, right))
 }
 
